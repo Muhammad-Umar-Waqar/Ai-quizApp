@@ -1,0 +1,49 @@
+*{
+    margin: 0;
+    padding: 0;
+ 
+    
+}
+body{
+ 
+    color: white;
+}
+.text-animate{
+    padding: 20px 30px; 
+    /* background: #f5f5f5;  */
+    font-size: 35px; 
+    font-family: monospace; 
+    border-radius: 50px; 
+    overflow: hidden; 
+    position: relative; 
+}
+.text-animate h2{
+    margin: 0px; 
+    color: #f59e0b;
+    white-space: nowrap; 
+    clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0); 
+    animation:  
+animate 8s steps(22, end) forwards, blink 4s infinite;
+}
+@keyframes animate{
+    0%{
+        width: 0;
+    }
+    100% { 
+        width: 100% 
+    } 
+}
+@keyframes blink { 
+  
+    0%, 
+    100% { 
+        border-right: 2px solid transparent; 
+    } 
+
+    50% { 
+        border-right: 2px solid #222;}
+}
+
+
+
+
