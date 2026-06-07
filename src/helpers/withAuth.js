@@ -1,29 +1,29 @@
 // utils/withAuth.js
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-const getCookie = (name) => {
-  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
-  return match ? match[2] : null;
-};
+import { getCookie, deleteCookie } from './cookieUtils';
 
 const withAuth = (WrappedComponent) => {
   return (props) => {
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+      let isMounted = true;
+
       const verifyToken = async () => {
-        // Get the token from client-side cookies
         const token = getCookie('token');
 
         if (!token) {
-          router.replace('/signup'); // Redirect if token is missing
+          if (isMounted) {
+            deleteCookie('token');
+            router.replace('/signup');
+          }
           return;
         }
 
         try {
-          // Verify token by calling your `/api/me` route
           const response = await fetch('/api/me', {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -31,27 +31,43 @@ const withAuth = (WrappedComponent) => {
           });
 
           if (response.ok) {
-            setIsAuthenticated(true);
+            if (isMounted) {
+              setIsAuthenticated(true);
+              setIsLoading(false);
+            }
           } else {
-            throw new Error('Token verification failed');
+            deleteCookie('token');
+            if (isMounted) {
+              setIsLoading(false);
+              router.replace('/signin');
+            }
           }
         } catch (error) {
-          console.error(error);
-          router.replace('/signin'); // Redirect if verification fails
+          console.error('Failed to fetch user data');
+          deleteCookie('token');
+          if (isMounted) {
+            setIsLoading(false);
+            router.replace('/signin');
+          }
         }
       };
 
       verifyToken();
-    }, []);
+
+      return () => {
+        isMounted = false;
+      };
+    }, [router]);
+
+    if (isLoading) {
+      return null;
+    }
 
     if (!isAuthenticated) {
-      console.log("User is not Authenticated");
-      return null; // Render nothing while checking authentication
-    }
-    if(isAuthenticated){
-      return <WrappedComponent {...props} />;
+      return null;
     }
 
+    return <WrappedComponent {...props} />;
   };
 };
 

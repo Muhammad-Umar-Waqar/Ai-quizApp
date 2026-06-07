@@ -10,6 +10,7 @@ import { MoreVerticalIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import withAuth from "../../helpers/withAuth"
 import { toast } from "react-toastify"
+import { getCookie, deleteCookie } from "../../helpers/cookieUtils"
 
 
 const SidebarContext = createContext()
@@ -28,9 +29,6 @@ function DashboardLayout({ children }) {
   const {unreadFriendRequests} = context;
 
 
-  // const [unreadCount, setUnreadCount] = useState(0);
-  const token = localStorage.getItem('token');
-
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -46,11 +44,20 @@ const router = useRouter();
         const response = await fetch('/api/logout', {
             method: 'POST',
         });
-        
-        localStorage.removeItem('token');
+
+        deleteCookie('token');
+        deleteCookie('userId');
         localStorage.removeItem('notificationId');
+
+        // Refresh user context to clear user data
+        if (updateUnreadCount) {
+          updateUnreadCount(0);
+        }
+        if (updateUnreadFriendRequestNotifications) {
+          updateUnreadFriendRequestNotifications(0);
+        }
+
         if (response.ok) {
-            // Handle successful logout (e.g., redirect to sign-in page)
             router.push('/signup');
         } else {
             console.error('Failed to log out');
@@ -94,6 +101,7 @@ useEffect(() => {
 
 
   useEffect(() => {
+    const token = getCookie('token');
     if (!token) return;
 
     const fetchFriends = async () => {
@@ -121,7 +129,7 @@ useEffect(() => {
       }
     }
     fetchFriends();
-  }, [token, updateUnreadFriendRequestNotifications])
+  }, [updateUnreadFriendRequestNotifications])
 
 
 

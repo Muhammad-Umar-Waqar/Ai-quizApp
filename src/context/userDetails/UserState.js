@@ -1,56 +1,67 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import UserContext from './UserContext'; // Make sure the context is correctly imported
+import React, { useEffect, useState, useCallback } from 'react';
+import UserContext from './UserContext';
+import { getCookie } from '../../helpers/cookieUtils';
 
 function UserState({ children }) {
-  const [user, setUser] = useState(null); // Initialize to null
-  const token = localStorage.getItem('token');
-  const [unreadCount, setUnreadCount] = useState(0); // Add unreadCount here
+  const [user, setUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadFriendRequests, setUnreadFriendRequestNotifications] = useState(0);
 
   const updateUnreadCount = (count) => setUnreadCount(count);
+  const updateUnreadFriendRequestNotifications = (count) => setUnreadFriendRequestNotifications(count);
 
-// m 
-const [unreadFriendRequests, setUnreadFriendRequestNotifications] = useState(0);
+  const fetchUser = useCallback(async () => {
+    const token = getCookie('token');
 
-const updateUnreadFriendRequestNotifications = (count) => setUnreadFriendRequestNotifications(count);
+    if (!token) {
+      console.warn('No token found');
+      setUser(null); // Clear user state if no token
+      return;
+    }
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        console.warn('No token found');
+    try {
+      const response = await fetch('/api/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch user data');
+        setUser(null); // Clear user state on error
         return;
       }
 
-      try {
-        const response = await fetch('/api/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+      const userData = await response.json();
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUser(null); // Clear user state on error
+    }
+  }, []);
 
-        if (!response.ok) {
-          console.error('Failed to fetch user data');
-          return;
-        }
-
-        const userData = await response.json();
-        setUser(userData); // Update user state with fetched data
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
+  // Initial fetch on mount
+  useEffect(() => {
     fetchUser();
-  }, [token]); // Depend on token so it re-runs if the token changes
+  }, [fetchUser]);
 
+  // Provide refreshUser function to allow manual refresh
+  const refreshUser = useCallback(() => {
+    fetchUser();
+  }, [fetchUser]);
 
-  
-
- 
   return (
-    <UserContext.Provider value={{ user, unreadCount, updateUnreadCount, unreadFriendRequests,updateUnreadFriendRequestNotifications  }}>
+    <UserContext.Provider value={{
+      user,
+      unreadCount,
+      updateUnreadCount,
+      unreadFriendRequests,
+      updateUnreadFriendRequestNotifications,
+      refreshUser
+    }}>
       {children}
     </UserContext.Provider>
   );

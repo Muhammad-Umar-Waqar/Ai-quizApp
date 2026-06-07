@@ -752,7 +752,7 @@ function Page() {
 
             {/* Non-Friends Column */}
             <div className="lg:w-1/2 w-full">
-                <h2 className="text-2xl font-semibold mb-4">Non-Friends</h2>
+                <h2 className="text-2xl font-semibold mb-4">People you may know</h2>
                 <TextField
                     label="Search Non-Friends"
                     variant="outlined"

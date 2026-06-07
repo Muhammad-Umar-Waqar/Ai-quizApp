@@ -8,6 +8,7 @@ import Image from "next/image";
 import { delay, motion } from "framer-motion";
 import { fadeIn } from '../variant'
 import Preloader from "../../utils/loading/preloader";
+import { getCookie } from '../helpers/cookieUtils';
 
 
 
@@ -66,12 +67,11 @@ const Home = () => {
   };
   
   
-  
+
   useEffect(()=>{
-    setToken(localStorage.getItem("token"));
+    setToken(getCookie("token"));
     setFullPageLoader(false);
-    setFullPageLoader(false);
-  },[token, pathname])
+  },[pathname])
 
 
 

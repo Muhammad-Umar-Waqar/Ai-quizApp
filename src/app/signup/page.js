@@ -1,10 +1,11 @@
 // app/signup/page.js
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Link } from 'next/link';
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import Preloader from '../../../utils/loading/preloader';
+import userContext from '@/context/userDetails/UserContext';
 
 
 
@@ -17,6 +18,8 @@ const [error, setError] = useState('');
 const [loading, setLoading] = useState(false);
 const router = useRouter();
 const [fullPageLoader, setFullPageLoader] = useState(false);
+const context = useContext(userContext);
+const { refreshUser } = context;
   
   const handleSignin = async (e) => {
     e.preventDefault();
@@ -33,10 +36,12 @@ const [fullPageLoader, setFullPageLoader] = useState(false);
       const result = await response.json();
 
       if (response.ok) {
-        // Save JWT token to localStorage/session
         setFullPageLoader(true);
-        localStorage.setItem('token', result.token);
         toast.success("User Signed In Successfully!")
+        // Refresh user context to load new user data
+        if (refreshUser) {
+          await refreshUser();
+        }
         router.push('/dashboard/profile'); // Redirect to dashboard after successful sign-in
       } else {
         if (result.error && result.error.issues) {

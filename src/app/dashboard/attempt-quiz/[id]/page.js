@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@radix-ui/react-tabs';
 
@@ -13,6 +13,7 @@ const AttemptQuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const { id } = useParams();
+  const router = useRouter();
 
   useEffect(() => {
     if (id) {
@@ -55,6 +56,8 @@ const AttemptQuizPage = () => {
     try {
       const validationPromises = questions.map(async (question) => {
         const userAnswer = answers[question._id];
+
+        console.log("question.questionText:", question.questionText , "question.correctAnswer:", question.correctAnswer)
 
         if (question.type === 'MCQs') {
           return parseInt(userAnswer) === question.correctOption;
@@ -101,6 +104,12 @@ const AttemptQuizPage = () => {
           body: JSON.stringify({ id: notificationId, status: 'completed', quizScore: percentageScore }),
         });
       }
+
+      // Redirect to notifications page after 2 seconds
+      setTimeout(() => {
+        router.push('/dashboard/notifications');
+      }, 2000);
+
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("Failed to submit quiz. Please try again.");
@@ -123,9 +132,18 @@ const AttemptQuizPage = () => {
 
   if (showResult) {
     return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Quiz Result</h1>
-        <p>Your score: {score.toFixed(2)}%</p>
+      <div className="p-4 flex items-center justify-center min-h-screen">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+          <div className="mb-6">
+            <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">Quiz Completed!</h1>
+          <p className="text-5xl font-bold text-blue-600 mb-2">{score.toFixed(0)}%</p>
+          <p className="text-gray-600 mb-6">Great job! Your score has been recorded.</p>
+          <p className="text-sm text-gray-500">Redirecting to notifications...</p>
+        </div>
       </div>
     );
   }
